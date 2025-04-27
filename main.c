@@ -7,6 +7,7 @@
 
 
 // TODO make square var a const ?
+// TODO progress saving option sob
 // current game status struct
 typedef struct
 {
@@ -16,6 +17,7 @@ typedef struct
     int mistakes;
     int max_mistakes;
     int empty_cells;
+    time_t start_time;
 } GameState;
 
 // allocating memory for board
@@ -296,6 +298,7 @@ void init_game(GameState *game, int size, int difficulty)
     // NIGHTMARE player can make 3 mistakes (for nightmare is 0)
     game->mistakes = 0;
     game->empty_cells = calculate_empty_cells(size, difficulty);
+    time(&game->start_time); // starting the counter
 
     game->solution = generate_sudoku(size, 0); // full board
     game->board = allocate_board(size); // board for player
@@ -305,11 +308,37 @@ void init_game(GameState *game, int size, int difficulty)
     remove_k_digits(game->board, size, game->empty_cells);
 }
 
+
+// function for showing how much time it took to finish the game
+void display_play_time(time_t start_time)
+{
+    time_t end_time;
+    time(&end_time);
+    double seconds = difftime(end_time, start_time);
+
+    int hours = (int)(seconds / 3600);
+    int minutes = ((int)seconds % 3600) / 60;
+    int secs = (int)seconds % 60;
+
+    printf("\nIt took you ");
+    if (hours > 0) // i hope not
+        printf("%d hours to play the game", hours);
+    if (minutes > 0 && hours < 1)
+        printf("%d minutes to play the game", minutes);
+    else
+        printf("%d seconds to play the game\n", secs);
+}
+
+
+
 // function for player to make a move
 void make_move(GameState *game)
 {
     int row, col, num;
     char answer[10];
+
+   // clock_t t;
+   // t = clock();
 
     while (true)
     {
@@ -359,14 +388,18 @@ void make_move(GameState *game)
                 if (num == game->solution[row][col])
                 {
                     game->board[row][col] = num;
-                    printf("Correct!:D (%d,%d) %d\n has been placed"
-                           " on the board", row+1, col+1, num);
+                    printf("Correct! Number %d has been placed"
+                           " on (%d,%d)", row+1, col+1, num);
                     game->empty_cells--;
 
                     if (game->empty_cells == 0)
                     {
                         printf("\nCongratulations you solved the game!\n");
                         print_board(game);
+                        display_play_time(game->start_time);
+                        //t = clock() - t;
+                        //double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+                        //printf("You took %f seconds playing\n", time_taken);
                         exit(0);
                     }
                 }
@@ -379,6 +412,10 @@ void make_move(GameState *game)
                     {
                         printf("\nGame over! Too many mistakes\n");
                         print_solution(game);
+                        display_play_time(game->start_time);
+                       // t = clock() - t;
+                        //double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+                        //printf("You took %f seconds playing\n", time_taken);
                         exit(0);
                     }
                 }
