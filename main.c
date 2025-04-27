@@ -276,6 +276,15 @@ int get_difficulty()
     return level;
 }
 
+void delay(int number_of_seconds)
+{
+    int milli_seconds = 1000 * number_of_seconds;
+    clock_t start_time = clock();
+    while (clock() < start_time + milli_seconds)
+        ;
+}
+
+
 // function for calculating empty cells based on picked difficulty
 int calculate_empty_cells(int size, int difficulty)
 {
@@ -284,9 +293,16 @@ int calculate_empty_cells(int size, int difficulty)
         case 1: return size * size / 2;      // 50% filled
         case 2: return size * size * 2 / 3;  // 33% filled
         case 3: return size * size * 3 / 4; // 25% filled return size * size / 2;
-        // TODO: nightmare mode >:)
-        case 4: return size * size * 2 / 3;  // temp
-        default: return size * size / 2; // easy is the default
+        case 4:
+            //char answer;
+            printf("...\n");
+            delay(2);
+            printf("Aright then...\n");
+            delay(2);
+            printf("\n\n> FILL THE WHOLE BOARD WITH 0 MISTAKES < \n");
+            return size * size -1; // ony one num is visible
+        default:
+            return size * size / 2; // easy is the default
     }
 }
 
