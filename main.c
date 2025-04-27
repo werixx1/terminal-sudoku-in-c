@@ -7,7 +7,7 @@
 
 
 // TODO make square var a const ?
-// TODO progress saving option sob
+// TODO get rid of warning flags somehow
 // current game status struct
 typedef struct
 {
@@ -18,6 +18,7 @@ typedef struct
     int max_mistakes;
     int empty_cells;
     time_t start_time;
+    time_t saved_time; // for saving progress
 } GameState;
 
 // allocating memory for board
@@ -315,6 +316,7 @@ void init_game(GameState *game, int size, int difficulty)
     game->mistakes = 0;
     game->empty_cells = calculate_empty_cells(size, difficulty);
     time(&game->start_time); // starting the counter
+    game->saved_time = 0;
 
     game->solution = generate_sudoku(size, 0); // full board
     game->board = allocate_board(size); // board for player
@@ -345,6 +347,79 @@ void display_play_time(time_t start_time)
         printf("%d seconds to play the game\n", secs);
 }
 
+// function for saving game progress
+void save_game(GameState *game)
+{
+    FILE *file = fopen("sudoku_saved_progress.dat", "wb");
+    if (file == NULL)
+    {
+        printf("Something went wrong?\n");
+        return;
+    }
+
+    // saving time played to still track how long it took for a player to
+    // finish the game
+    time(&game->saved_time);
+
+    // saving current game info
+    fwrite(&game->size, sizeof(int), 1, file);
+    fwrite(&game->mistakes, sizeof(int), 1, file);
+    fwrite(&game->max_mistakes, sizeof(int), 1, file);
+    fwrite(&game->empty_cells, sizeof(int), 1, file);
+    fwrite(&game->start_time, sizeof(time_t), 1, file);
+    fwrite(&game->saved_time, sizeof(time_t), 1, file);
+
+    // saving board and solution
+    for (int i = 0; i < game->size; i++)
+    {
+        fwrite(game->board[i], sizeof(int), game->size, file);
+        fwrite(game->solution[i], sizeof(int), game->size, file);
+    }
+
+    fclose(file);
+    printf("Progress has been saved\n");
+}
+
+// function for loading game progress
+// (made as a bool so it doesnt return anything weird if the file doesnt exist)
+bool load_game(GameState *game)
+{
+    FILE *file = fopen("sudoku_saved_progress.dat", "rb");
+    if (file == NULL)
+    {
+        printf("No previous saved game found\n");
+        return false;
+    }
+
+    // read previous progress info
+    fread(&game->size, sizeof(int), 1, file);
+    fread(&game->mistakes, sizeof(int), 1, file);
+    fread(&game->max_mistakes, sizeof(int), 1, file);
+    fread(&game->empty_cells, sizeof(int), 1, file);
+    fread(&game->start_time, sizeof(time_t), 1, file);
+    fread(&game->saved_time, sizeof(time_t), 1, file);
+
+    // allocate memory
+    game->board = allocate_board(game->size);
+    game->solution = allocate_board(game->size);
+
+    // read board and solution from previous progress
+    for (int i = 0; i < game->size; i++)
+    {
+        fread(game->board[i], sizeof(int), game->size, file);
+        fread(game->solution[i], sizeof(int), game->size, file);
+    }
+
+    // adjusting time
+    time_t current_time;
+    time(&current_time);
+    double elapsed = difftime(current_time, game->saved_time);
+    game->start_time += (time_t)elapsed;
+
+    fclose(file);
+    printf("Previous game loaded\n");
+    return true;
+}
 
 
 // function for player to make a move
@@ -360,11 +435,18 @@ void make_move(GameState *game)
     {
         printf("\nOptions:\n-type 'number_of_row number_of_column"
                " number_you_want_to_place' (ex. 1 2 4) with spaces\n"
-               "-type 'd row column' to delete a number\n-type 'q' to quit: \n");
+               "-type 'd row column' to delete a number\n-type 's' to save the current progress "
+               "(and quit)"
+               "\n-type 'q' to quit: \n");
         scanf("%s", answer);
 
         if (strcmp(answer, "q") == 0)
         {
+            exit(0);
+        }
+        if (strcmp(answer, "s") == 0)
+        {
+            save_game(game);
             exit(0);
         }
         if (strcmp(answer, "d") == 0)
@@ -481,7 +563,7 @@ void start_new_game()
 
 int main()
 {
-    srand(time(NULL));
+    srand(time(NULL)); // ?
     printf("--------------------------------\n");
     printf("\t> TERMINAL SUDOKU <\n");
     int choice = 0;
@@ -489,7 +571,7 @@ int main()
     while (true)
     {
         printf("\nWhat would you like to do? (press number)\n");
-        printf("1. New game\n2. Instruction\n3. Quit\n");
+        printf("1. New game\n2. Instruction\n3. Load previous game\n4. Quit\n");
         scanf("%d", &choice);
 
         switch (choice)
@@ -500,6 +582,16 @@ int main()
                "dont ask me\n");
                 break;
             case 3:
+                GameState game;
+                if (load_game(&game))
+                {
+                    printf("\n-- Continuing %dx%d Sudoku --\n", game.size, game.size);
+                    play_game(&game);
+                    free_board(game.board, game.size);
+                    free_board(game.solution, game.size);
+                }
+                break;
+            case 4:
                 printf("Quitting...\n");
                 exit(0);
             default:
