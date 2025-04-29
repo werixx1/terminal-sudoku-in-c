@@ -130,3 +130,5 @@ else
 - ``` if (num == game->solution[row][col]) ``` = if user input is the same as on the solution board (same place, same num) we change the number of empty cells
 - ``` if (game->empty_cells == 0) ``` = when theres no empty cells left user wins and whole board is displayed + gameplay time
 - ``` else  { game->mistakes++; } ``` = else we count mistakes (until theres more than it's allowed)
+
+  [theres no explanation for sudoku generator algorithm since its already nicely documented on geeksforgeeks website)
