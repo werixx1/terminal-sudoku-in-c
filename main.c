@@ -15,11 +15,11 @@ typedef struct
     int mistakes;
     int max_mistakes;
     int empty_cells;
-    time_t start_time;
+    time_t start_time; // for counting how much time it took to play the game
     time_t saved_time; // for saving progress
 } GameState;
 
-// allocating memory for board
+// function for allocating memory for board
 int **allocate_board(int size)
 {
     int **board = malloc(size * sizeof(int *));
@@ -28,7 +28,7 @@ int **allocate_board(int size)
     return board;
 }
 
-// freeing board memory
+// function for freeing board memory
 void free_board(int **board, int size)
 {
     for (int i = 0; i < size; i++)
@@ -36,7 +36,7 @@ void free_board(int **board, int size)
     free(board);
 }
 
-// function for saving solution before removing numbers from board
+// function for saving original solution before removing numbers from board (so we dont lose it)
 void copy_board(int **og_board, int **new_board, int size)
 {
     if (og_board == NULL || new_board == NULL || size <= 0) return;
@@ -56,14 +56,13 @@ void print_current_board(const GameState *game)
     printf("    ");
     for (int j = 0; j < size; j++) {
         if (j % square == 0 && j != 0)
-            printf("  "); // cleaner look (spaces between squares)
+            printf("  "); // for cleaner look (numbers have spaces when they are squares)
         printf("%2d ", j + 1);
     }
     printf("\n");
 
     for (int i = 0; i < size; i++)
         {
-        // printing lines between nums for better visibility
         if (i % square == 0 && i != 0)
             {
             printf("    ");
@@ -81,7 +80,7 @@ void print_current_board(const GameState *game)
         for (int j = 0; j < size; j++)
             {
             if (j % square == 0 && j != 0)
-                printf("| ");
+                printf("| ");  //lines between nums for better visibility
             if (game->board[i][j] == 0)
                 printf(" . ");
             else
@@ -91,7 +90,7 @@ void print_current_board(const GameState *game)
     }
 }
 
-// function for printing solution
+// function for printing solution (of a certain game)
 void print_solution(const GameState *game)
 {
     int size = game->size;
@@ -156,8 +155,8 @@ bool unused_in_square(int **board, int row_start, int col_start, int num, int sq
     return true;
 }
 
-// function for check if we can place a num in a certain place
-// (if its empty and unused in row col and square)
+// function for checking if we can place a num in a certain place
+// (if its empty and unused in row col and square, all these sudoku rules)
 bool is_safe(int **board, int size, int row, int col, int num)
 {
     int square = (int)sqrt(size);
@@ -272,13 +271,14 @@ int get_difficulty()
     scanf("%d", &level);
 
     while (level < 1 || level > 4)
-        {
+    {
         printf("Such level doesn't exist. Please enter 1-4: ");
         scanf("%d", &level);
     }
     return level;
 }
 
+// for dramating printing if someone chose nightmare level
 void delay(int number_of_seconds)
 {
     int milli_seconds = 1000 * number_of_seconds;
@@ -295,9 +295,8 @@ int calculate_empty_cells(int size, int difficulty)
     {
         case 1: return size * size / 2;      // 50% filled
         case 2: return size * size * 2 / 3;  // 33% filled
-        case 3: return size * size * 3 / 4; // 25% filled return size * size / 2;
+        case 3: return size * size * 3 / 4; // 25% filled 
         case 4:
-            //char answer;
             printf("...\n");
             delay(2);
             printf("Good luck...\n");
@@ -313,19 +312,17 @@ int calculate_empty_cells(int size, int difficulty)
 void init_game(GameState *game, int size, int difficulty)
 {
     game->size = size;
-    game->max_mistakes = (difficulty == 4) ? 0 : 3; // for all games except
-    // NIGHTMARE player can make 3 mistakes (for nightmare is 0)
+    game->max_mistakes = (difficulty == 4) ? 0 : 3; // for all games except NIGHTMARE
+                                                    // player can make 3 mistakes (for nightmare is 0)
     game->mistakes = 0;
     game->empty_cells = calculate_empty_cells(size, difficulty);
-    time(&game->start_time); // starting the counter
+    time(&game->start_time); // starting the counter (to later calculate time played)
     game->saved_time = 0;
 
     game->solution = generate_sudoku(size, 0); // full board
-    game->board = allocate_board(size); // board for player
-    // copying solution to player board
-    copy_board(game->solution, game->board, size);
-    // removing some nums for it to be playable
-    remove_k_digits(game->board, size, game->empty_cells);
+    game->board = allocate_board(size); // board for player 
+    copy_board(game->solution, game->board, size);  // copying solution to player board
+    remove_k_digits(game->board, size, game->empty_cells);  // removing some nums for it to be playable
 }
 
 
@@ -360,7 +357,7 @@ void save_game(GameState *game)
     }
 
     // saving time played to still track how long it took for a player to
-    // finish the game
+    // finish the game after they load it later from save
     time(&game->saved_time);
 
     // saving current game info
@@ -424,12 +421,10 @@ bool load_game(GameState *game)
 }
 
 
-// function for player to make a move
+// function for tracking player's moves (its running untill player saves/quits or wins/loses)
 void make_move(GameState *game)
 {
     int col, num;
-    // clock_t t;
-   // t = clock();
 
     while (true)
     {
@@ -478,9 +473,6 @@ void make_move(GameState *game)
                         printf("\nCongratulations you solved the game!\n");
                         print_current_board(game);
                         display_play_time(game->start_time);
-                        //t = clock() - t;
-                        //double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
-                        //printf("You took %f seconds playing\n", time_taken);
                         exit(0);
                     }
                 }
@@ -494,9 +486,6 @@ void make_move(GameState *game)
                         printf("\nGame over! Too many mistakes\n");
                         print_solution(game);
                         display_play_time(game->start_time);
-                       // t = clock() - t;
-                        //double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
-                        //printf("You took %f seconds playing\n", time_taken);
                         exit(0);
                     }
                 }
@@ -511,6 +500,7 @@ void make_move(GameState *game)
     }
 }
 
+// loops for main gameplay
 void play_game(GameState *game)
 {
     while (true)
@@ -520,6 +510,7 @@ void play_game(GameState *game)
     }
 }
 
+// function for when player chooses to start a new game
 void start_new_game()
 {
     printf("> NEW GAME\n");
@@ -544,7 +535,7 @@ void start_new_game()
     free_board(game.solution, size);
 }
 
-
+// just for code modularity
 void show_instructions()
 {
     const char* instr = "\t> INSTRUCTIONS: <\n"
@@ -562,7 +553,7 @@ void show_instructions()
 
 int main()
 {
-    srand(time(NULL)); // ?
+    srand(time(NULL)); // seeding rand() with current time
     printf("--------------------------------\n");
     printf("\t> TERMINAL SUDOKU <\n");
     int choice = 0;
