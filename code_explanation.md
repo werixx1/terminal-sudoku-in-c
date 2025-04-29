@@ -52,7 +52,7 @@ printf("    ");
 ```
 - ```c for(...) j % square == 0 && j != 0 ```= for each square (sqrt of size) there's added a space to divide them
 - ```c for(...) if (k % square == 0 && k != 0) ``` = if we 'are' at the square '---' is drawn and '+' where lines meet
-- ``` printf("%2d  ", i + 1); ``` = printing num of row and whats inside
+- ``` printf("%2d  ", i + 1); ``` = printing whats inside row (with extra space if num is not two digits)
 - ``` if (game->board[i][j] == 0) printf(" . "); else printf("%2d ", game->board[i][j]); ``` = if we dont have a value in a certain place (0 removed previously with
   remove_k_values) we print '.' and if we do we print that number
 
