@@ -41,22 +41,26 @@ void free_board(int **board, int size)
 // function for saving solution before removing numbers from board
 void copy_board(int **og_board, int **new_board, int size)
 {
+    if (og_board == NULL || new_board == NULL || size <= 0) return;
     for (int i = 0; i < size; i++)
         for (int j = 0; j < size; j++)
             new_board[i][j] = og_board[i][j];
 }
 
 // function for printing current board
-void print_board(GameState *game)
+void print_board(const GameState *game)
 {
     int size = game->size;
-    int square = (int)sqrt(size); // sudoku square ?? how is it called
+    const int square = (int)sqrt(size); // sudoku square ?? how is it called
     printf("\nMistakes: %d/%d\n", game->mistakes, game->max_mistakes);
 
     // printing nums of columns
     printf("    ");
-    for (int j = 0; j < size; j++)
+    for (int j = 0; j < size; j++) {
+        if (j % square == 0 && j != 0)
+            printf("  "); // cleaner look (spaces between squares)
         printf("%2d ", j + 1);
+    }
     printf("\n");
 
     for (int i = 0; i < size; i++)
@@ -91,7 +95,7 @@ void print_board(GameState *game)
 
 // function for printing solution
 // TODO: make print_solution and print_board one function
-void print_solution(GameState *game)
+void print_solution(const GameState *game)
 {
     int size = game->size;
     int square = (int)sqrt(size);
@@ -221,11 +225,12 @@ bool fill_remaining(int **board, int size, int row, int col)
 // remove k digits randomly
 void remove_k_digits(int **board, int size, int k)
 {
+    if (board == NULL) return;
     int count = 0;
     while (count < k)
     {
-        int i = rand() % size;
-        int j = rand() % size;
+        const int i = rand() % size;
+        const int j = rand() % size;
         if (board[i][j] != 0)
         {
             board[i][j] = 0;
@@ -298,7 +303,7 @@ int calculate_empty_cells(int size, int difficulty)
             //char answer;
             printf("...\n");
             delay(2);
-            printf("Aright then...\n");
+            printf("Good luck...\n");
             delay(2);
             printf("\n\n> FILL THE WHOLE BOARD WITH 0 MISTAKES < \n");
             return size * size -1; // ony one num is visible
@@ -353,7 +358,7 @@ void save_game(GameState *game)
     FILE *file = fopen("sudoku_saved_progress.dat", "wb");
     if (file == NULL)
     {
-        printf("Something went wrong?\n");
+        printf("Something went wrong(?)\n");
         return;
     }
 
@@ -425,17 +430,16 @@ bool load_game(GameState *game)
 // function for player to make a move
 void make_move(GameState *game)
 {
-    int row, col, num;
-    char answer[10];
-
-   // clock_t t;
+    int col, num;
+    // clock_t t;
    // t = clock();
 
     while (true)
     {
+        char answer[10];
         printf("\nOptions:\n-type 'number_of_row number_of_column"
                " number_you_want_to_place' (ex. 1 2 4) with spaces\n"
-               "-type 'd row column' to delete a number\n-type 's' to save the current progress "
+               "-type 's' to save the current progress "
                "(and quit)"
                "\n-type 'q' to quit: \n");
         scanf("%s", answer);
@@ -449,27 +453,10 @@ void make_move(GameState *game)
             save_game(game);
             exit(0);
         }
-        if (strcmp(answer, "d") == 0)
-        {
-            scanf("%d %d", &row, &col);
-            row--; col--;
-
-            if (row >= 0 && row < game->size && col >= 0 && col < game->size)
-            {
-                if (game->board[row][col] == 0) {
-                    printf("This cell is already empty\n");
-                } else {
-                    game->board[row][col] = 0;
-                    printf("Number from (%d,%d) has been deleted\n", row+1, col+1);
-                }
-                return;
-            }
-            else {printf("There is no potition like this\n");}
-        }
         else
         {
             // rrying to parse player input as numbers
-            row = atoi(answer);
+            int row = atoi(answer);
             scanf("%d %d", &col, &num);
             row--; col--;
 
@@ -478,8 +465,7 @@ void make_move(GameState *game)
             {
                 if (game->board[row][col] != 0)
                 {
-                    printf("This cell is not empty. You can delete it's value by"
-                           " typing d row column\n");
+                    printf("This cell is not empty, you can't put a number here\n");
                     continue;
                 }
 
@@ -561,6 +547,22 @@ void start_new_game()
     free_board(game.solution, size);
 }
 
+
+void show_instructions()
+{
+    const char* instr = "\t> INSTRUCTIONS: <\n"
+                       "Choose new game or load previous one"
+                       " (if it was saved).\nAfter starting new game you will choose "
+                       "a level\n(amount of visible numbers on the board differ in each)"
+                       " and board size.\n"
+                       "You can make 3 mistakes (placing numbers in wrong cells)"
+                       "\nafter that the game ends.\n"
+                       "You can save your game at any moment and come back to it"
+                       "\n(but each save rewrites the previous one)\nor quit (without saving)\n"
+                       "Good luck!\n";
+    printf("%s", instr);
+}
+
 int main()
 {
     srand(time(NULL)); // ?
@@ -578,8 +580,7 @@ int main()
         {
             case 1: start_new_game(); break;
             case 2:
-                printf("Instructions: press some numbers i guess?? "
-               "dont ask me\n");
+                show_instructions();
                 break;
             case 3:
                 GameState game;
@@ -600,5 +601,4 @@ int main()
                 break;
         }
     }
-    return 0;
 }
