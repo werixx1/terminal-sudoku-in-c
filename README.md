@@ -35,7 +35,7 @@ all complex functions are explained in [code_explanation.md](https://github.com/
 - function for time-delay: https://www.geeksforgeeks.org/time-delay-c/
 - handling files: https://www.w3schools.com/c/c_files_read.php and https://www.youtube.com/watch?v=P-fWNCF7Wx8
 
-
+![siemka](https://github.com/user-attachments/assets/4632c04c-4cd4-4115-991e-ca141d679aad)
 
 
 
