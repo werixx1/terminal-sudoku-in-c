@@ -6,8 +6,6 @@
 #include <string.h>
 
 
-// TODO make square var a const ?
-// TODO get rid of warning flags somehow
 // current game status struct
 typedef struct
 {
@@ -48,7 +46,7 @@ void copy_board(int **og_board, int **new_board, int size)
 }
 
 // function for printing current board
-void print_board(const GameState *game)
+void print_current_board(const GameState *game)
 {
     int size = game->size;
     const int square = (int)sqrt(size); // sudoku square ?? how is it called
@@ -94,7 +92,6 @@ void print_board(const GameState *game)
 }
 
 // function for printing solution
-// TODO: make print_solution and print_board one function
 void print_solution(const GameState *game)
 {
     int size = game->size;
@@ -479,7 +476,7 @@ void make_move(GameState *game)
                     if (game->empty_cells == 0)
                     {
                         printf("\nCongratulations you solved the game!\n");
-                        print_board(game);
+                        print_current_board(game);
                         display_play_time(game->start_time);
                         //t = clock() - t;
                         //double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
@@ -518,7 +515,7 @@ void play_game(GameState *game)
 {
     while (true)
     {
-        print_board(game);
+        print_current_board(game);
         make_move(game);
     }
 }
@@ -527,7 +524,7 @@ void start_new_game()
 {
     printf("> NEW GAME\n");
     int size;
-    printf("Choose board size (4, 9, 16): \n");
+    printf("Choose board size (4, 9, 16):\n");
     scanf("%d", &size);
 
     if (size != 4 && size != 9 && size != 16)
@@ -569,12 +566,24 @@ int main()
     printf("--------------------------------\n");
     printf("\t> TERMINAL SUDOKU <\n");
     int choice = 0;
+    char input[256];
     // menu
     while (true)
     {
         printf("\nWhat would you like to do? (press number)\n");
         printf("1. New game\n2. Instruction\n3. Load previous game\n4. Quit\n");
-        scanf("%d", &choice);
+
+        if (fgets(input, sizeof(input), stdin) == NULL) 
+        {
+            printf("\nError reading input\n");
+            continue;
+        }
+        
+        if (sscanf(input, "%d", &choice) != 1) 
+        {
+            printf("\nInvalid input. Please enter a number.\n");
+            continue;
+        }
 
         switch (choice)
         {
@@ -596,8 +605,8 @@ int main()
                 printf("Quitting...\n");
                 exit(0);
             default:
-                printf("No such option is available. "
-                "Please choose a different option.\n");
+                printf("\nNo such option is available. "
+                "Please choose 1-4.\n");
                 break;
         }
     }

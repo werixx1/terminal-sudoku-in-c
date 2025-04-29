@@ -54,3 +54,4 @@ dkms.conf
 .idea
 CMakeFiles
 CMakeLists.txt
+*.vscode
