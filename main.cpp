@@ -4,6 +4,7 @@
 #include <tgmath.h>
 #include <time.h>
 #include <string.h>
+#include <ncurses/ncurses.h>
 
 
 // current game status struct
@@ -22,9 +23,9 @@ typedef struct
 // function for allocating memory for board
 int **allocate_board(int size)
 {
-    int **board = malloc(size * sizeof(int *));
+    int **board = (int**)malloc(size * sizeof(int *));
     for (int i = 0; i < size; i++)
-        board[i] = malloc(size * sizeof(int));
+        board[i] = (int*)malloc(size * sizeof(int));
     return board;
 }
 
@@ -50,43 +51,43 @@ void print_current_board(const GameState *game)
 {
     int size = game->size;
     const int square = (int)sqrt(size); // sudoku square ?? how is it called
-    printf("\nMistakes: %d/%d\n", game->mistakes, game->max_mistakes);
+    printw("\nMistakes: %d/%d\n", game->mistakes, game->max_mistakes);
 
     // printing nums of columns
-    printf("    ");
+    printw("    ");
     for (int j = 0; j < size; j++) {
         if (j % square == 0 && j != 0)
-            printf("  "); // for cleaner look (numbers have spaces when they are squares)
-        printf("%2d ", j + 1);
+            printw("  "); // for cleaner look (numbers have spaces when they are squares)
+        printw("%2d ", j + 1);
     }
-    printf("\n");
+    printw("\n");
 
     for (int i = 0; i < size; i++)
         {
         if (i % square == 0 && i != 0)
             {
-            printf("    ");
+            printw("    ");
             for (int k = 0; k < size; k++)
                 {
                 if (k % square == 0 && k != 0)
-                    printf("+"); // where lines cross
-                printf("---");
+                    printw("+"); // where lines cross
+                printw("---");
             }
-            printf("\n");
+            printw("\n");
         }
 
         // printing row nums and content
-        printf("%2d  ", i + 1);
+        printw("%2d  ", i + 1);
         for (int j = 0; j < size; j++)
             {
             if (j % square == 0 && j != 0)
-                printf("| ");  //lines between nums for better visibility
+                printw("| ");  //lines between nums for better visibility
             if (game->board[i][j] == 0)
-                printf(" . ");
+                printw(" . ");
             else
-                printf("%2d ", game->board[i][j]);
+                printw("%2d ", game->board[i][j]);
             }
-        printf("\n");
+        printw("\n");
     }
 }
 
@@ -95,35 +96,35 @@ void print_solution(const GameState *game)
 {
     int size = game->size;
     int square = (int)sqrt(size);
-    printf("\nCorrect solution:\n");
+    printw("\nCorrect solution:\n");
 
-    printf("    ");
+    printw("    ");
     for (int j = 0; j < size; j++)
-        printf("%2d ", j + 1);
-    printf("\n");
+        printw("%2d ", j + 1);
+    printw("\n");
 
     for (int i = 0; i < size; i++)
         {
         if (i % square == 0 && i != 0)
         {
-            printf("    ");
+            printw("    ");
             for (int k = 0; k < size; k++)
             {
                 if (k % square == 0 && k != 0)
-                    printf("+");
-                printf("---");
+                    printw("+");
+                printw("---");
             }
-            printf("\n");
+            printw("\n");
         }
 
-        printf("%2d  ", i + 1);
+        printw("%2d  ", i + 1);
         for (int j = 0; j < size; j++)
         {
             if (j % square == 0 && j != 0)
-                printf("| ");
-            printf("%2d ", game->solution[i][j]);
+                printw("| ");
+            printw("%2d ", game->solution[i][j]);
         }
-        printf("\n");
+        printw("\n");
     }
 }
 
@@ -262,18 +263,19 @@ int **generate_sudoku(int size, int empty_cells)
 // function for setting diffucuilty level
 int get_difficulty()
 {
-    int level;
-    printf("\nChoose difficulty level:\n");
-    printf("1. Easy\n");
-    printf("2. Medium\n");
-    printf("3. Hard\n");
-    printf("4. NIGHTMARE (not recommended)\n");
-    scanf("%d", &level);
-
+    int choice;
+    printw("\nChoose difficulty level:\n");
+    printw("1. Easy\n");
+    printw("2. Medium\n");
+    printw("3. Hard\n");
+    printw("4. NIGHTMARE (not recommended)\n");
+    choice = getch();
+    int level = choice - '0';
     while (level < 1 || level > 4)
     {
-        printf("Such level doesn't exist. Please enter 1-4: ");
-        scanf("%d", &level);
+        printw("Such level doesn't exist. Please enter 1-4: ");
+        //scanf("%d", &level);
+        level = getch();
     }
     return level;
 }
@@ -297,11 +299,11 @@ int calculate_empty_cells(int size, int difficulty)
         case 2: return size * size * 2 / 3;  // 33% filled
         case 3: return size * size * 3 / 4; // 25% filled 
         case 4:
-            printf("...\n");
+            printw("...\n");
             delay(2);
-            printf("Good luck...\n");
+            printw("Good luck...\n");
             delay(2);
-            printf("\n\n> FILL THE WHOLE BOARD WITH 0 MISTAKES < \n");
+            printw("\n\n> FILL THE WHOLE BOARD WITH 0 MISTAKES < \n");
             return size * size -1; // ony one num is visible
         default:
             return size * size / 2; // easy is the default
@@ -337,13 +339,13 @@ void display_play_time(time_t start_time)
     int minutes = ((int)seconds % 3600) / 60;
     int secs = (int)seconds % 60;
 
-    printf("\nIt took you ");
+    printw("\nIt took you ");
     if (hours > 0) // i hope not
-        printf("%d hours to play the game", hours);
+        printw("%d hours to play the game", hours);
     if (minutes > 0 && hours < 1)
-        printf("%d minutes to play the game", minutes);
+        printw("%d minutes to play the game", minutes);
     else
-        printf("%d seconds to play the game\n", secs);
+        printw("%d seconds to play the game\n", secs);
 }
 
 // function for saving game progress
@@ -352,7 +354,7 @@ void save_game(GameState *game)
     FILE *file = fopen("sudoku_saved_progress.dat", "wb");
     if (file == NULL)
     {
-        printf("Something went wrong(?)\n");
+        printw("Something went wrong(?)\n");
         return;
     }
 
@@ -376,7 +378,7 @@ void save_game(GameState *game)
     }
 
     fclose(file);
-    printf("Progress has been saved\n");
+    printw("Progress has been saved\n");
 }
 
 // function for loading game progress
@@ -386,7 +388,7 @@ bool load_game(GameState *game)
     FILE *file = fopen("sudoku_saved_progress.dat", "rb");
     if (file == NULL)
     {
-        printf("No previous saved game found\n");
+        printw("No previous saved game found\n");
         return false;
     }
 
@@ -416,7 +418,7 @@ bool load_game(GameState *game)
     game->start_time += (time_t)elapsed;
 
     fclose(file);
-    printf("Previous game loaded\n");
+    printw("Previous game loaded\n");
     return true;
 }
 
@@ -429,7 +431,7 @@ void make_move(GameState *game)
     while (true)
     {
         char answer[10];
-        printf("\nOptions:\n-type 'number_of_row number_of_column"
+        printw("\nOptions:\n-type 'number_of_row number_of_column"
                " number_you_want_to_place' (ex. 1 2 4) with spaces\n"
                "-type 's' to save the current progress "
                "(and quit)"
@@ -457,20 +459,20 @@ void make_move(GameState *game)
             {
                 if (game->board[row][col] != 0)
                 {
-                    printf("This cell is not empty, you can't put a number here\n");
+                    printw("This cell is not empty, you can't put a number here\n");
                     continue;
                 }
 
                 if (num == game->solution[row][col])
                 {
                     game->board[row][col] = num;
-                    printf("Correct! Number %d has been placed"
+                    printw("Correct! Number %d has been placed"
                            " on (%d,%d)", row+1, col+1, num);
                     game->empty_cells--;
 
                     if (game->empty_cells == 0)
                     {
-                        printf("\nCongratulations you solved the game!\n");
+                        printw("\nCongratulations you solved the game!\n");
                         print_current_board(game);
                         display_play_time(game->start_time);
                         exit(0);
@@ -479,11 +481,11 @@ void make_move(GameState *game)
                 else
                 {
                     game->mistakes++;
-                    printf("Wrong!:( Mistakes: %d/%d\n", game->mistakes, game->max_mistakes);
+                    printw("Wrong!:( Mistakes: %d/%d\n", game->mistakes, game->max_mistakes);
 
                     if (game->mistakes >= game->max_mistakes)
                     {
-                        printf("\nGame over! Too many mistakes\n");
+                        printw("\nGame over! Too many mistakes\n");
                         print_solution(game);
                         display_play_time(game->start_time);
                         exit(0);
@@ -493,7 +495,7 @@ void make_move(GameState *game)
             }
             else
             {
-                printf("Invalid input, please enter row (1-%d), col (1-%d), number (1-%d)\n",
+                printw("Invalid input, please enter row (1-%d), col (1-%d), number (1-%d)\n",
                       game->size, game->size, game->size);
             }
         }
@@ -513,22 +515,25 @@ void play_game(GameState *game)
 // function for when player chooses to start a new game
 void start_new_game()
 {
-    printf("> NEW GAME\n");
-    int size;
-    printf("Choose board size (4, 9, 16):\n");
-    scanf("%d", &size);
+    printw("> NEW GAME\n");
+    int choice;
+    printw("Choose board size (4, 9, 16):\n");
+    choice = getch();
+    clear();
+    int size = choice - '0';
+    //scanf("%d", &size);
 
     if (size != 4 && size != 9 && size != 16)
     {
-        printf("Invalid size. Using default 9x9.\n");
+        printw("\nInvalid size. Using default 9x9.\n");
         size = 9;
     }
 
     int difficulty = get_difficulty();
-
+    size = int(choice);
     GameState game;
     init_game(&game, size, difficulty);
-    printf("\n-- Starting %dx%d Sudoku --\n", size, size);
+    printw("\n-- Starting %dx%d Sudoku --\n", size, size);
     play_game(&game);
 
     free_board(game.board, size);
@@ -548,57 +553,61 @@ void show_instructions()
                        "You can save your game at any moment and come back to it"
                        "\n(but each save rewrites the previous one)\nor quit (without saving)\n"
                        "Good luck!\n";
-    printf("%s", instr);
+    printw("%s", instr);
 }
 
 int main()
 {
-    srand(time(NULL)); // seeding rand() with current time
-    printf("--------------------------------\n");
-    printf("\t> TERMINAL SUDOKU <\n");
-    int choice = 0;
+    int choice;
     char input[256];
+    initscr(); // start
+    srand(time(NULL)); // seeding rand() with current time
+    printw("--------------------------------\n");
+    printw("\t> TERMINAL SUDOKU <\n");
     // menu
-    while (true)
+    do
     {
-        printf("\nWhat would you like to do? (press number)\n");
-        printf("1. New game\n2. Instruction\n3. Load previous game\n4. Quit\n");
+        printw("\nWhat would you like to do? (press number)\n");
+        printw("1. New game\n2. Instruction\n3. Load previous game\n4. Quit\n");
+        int choice = getch();
+        clear();
 
-        if (fgets(input, sizeof(input), stdin) == NULL) 
-        {
-            printf("\nError reading input\n");
-            continue;
-        }
+        // if (fgets(input, sizeof(input), stdin) == NULL) 
+        // {
+        //     printw("\nError reading input\n");
+        //     continue;
+        // }
         
-        if (sscanf(input, "%d", &choice) != 1) 
-        {
-            printf("\nInvalid input. Please enter a number.\n");
-            continue;
-        }
+        // if (sscanf(input, "%d", &choice) != 1) 
+        // {
+        //     printw("\nInvalid input. Please enter a number.\n");
+        //     continue;
+        // }
 
         switch (choice)
         {
-            case 1: start_new_game(); break;
-            case 2:
+            case '1': start_new_game(); break;
+            case '2':
                 show_instructions();
                 break;
-            case 3:
+            case '3':
                 GameState game;
                 if (load_game(&game))
                 {
-                    printf("\n-- Continuing %dx%d Sudoku --\n", game.size, game.size);
+                    printw("\n-- Continuing %dx%d Sudoku --\n", game.size, game.size);
                     play_game(&game);
                     free_board(game.board, game.size);
                     free_board(game.solution, game.size);
                 }
                 break;
-            case 4:
-                printf("Quitting...\n");
-                exit(0);
+            case '4':
+                printw("\nQuitting...\n"); break;
             default:
-                printf("\nNo such option is available. "
-                "Please choose 1-4.\n");
+                printw("\nNo such option is available. "
+                "Please choose between 1-4.\n");
                 break;
         }
-    }
+    }  while (choice != '4');
+    getch();
+    endwin();
 }
